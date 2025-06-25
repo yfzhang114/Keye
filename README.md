@@ -1,26 +1,24 @@
-# Kwai Keye: Multimodal Large Language Model
+# Kwai Keye-VL
 
 
 <div align="center">
-  <img src="asset/keye_logo_2.png" width="100%" alt="Kwai Keye Architecture">
+  <img src="asset/keye_logo_2.png" width="100%" alt="Kwai Keye-VL Logo">
 </div>
 
-[![Homepage](https://img.shields.io/badge/Project-Page-9cf?logo=github&link=https%3A%2F%2Fkwai-keye.github.io%2F)](https://kwai-keye.github.io/)[![Latest Version](https://img.shields.io/badge/Updated-June%202025-brightgreen)]()
+<font size=7><div align='center' >  [[📖 Home Page](https://kwai-keye.github.io/)] [[📊 Models](https://huggingface.co/Kwai-Keye)] </div></font>
 
 
-## Introduction:
-
-**Kwai Keye** is a state-of-the-art multimodal large model developed by the **Foundational Large Model Team** at [Kuaishou](https://www.kuaishou.com/). As a core AI product within Kuaishou's technology ecosystem, Keye delivers exceptional performance across visual, linguistic, and cognitive tasks through continuous evolution and knowledge integration.
+**Kwai Keye-VL** is a state-of-the-art multimodal large language model developed by the **Foundational Large Model Team** at [Kuaishou](https://www.kuaishou.com/). As a core AI product within Kuaishou's technology ecosystem, Keye delivers exceptional performance across visual, linguistic, and cognitive tasks through continuous evolution and knowledge integration.
 
 
 <div align="center">
-  <img src="asset/teaser.png" width="100%" alt="Kwai Keye Architecture">
+  <img src="asset/teaser.png" width="100%" alt="Kwai Keye-VL Performance">
 </div>
 
 
 ## Architecture
 
-The model architecture of Kwai Keye is based on the Qwen3-8B language model and incorporates a VisionEncoder initialized with open-source SigLIP. Kwai Keye supports native dynamic resolution, preserving the original aspect ratio of images as much as possible by dividing each image into a sequence of 14x14 patches. Subsequently, a simple MLP layer maps and merges the visual tokens. The model employs 3D RoPE (Rotary Position Embedding) as the position encoding to achieve unified processing of text, image, and video information, establishing a one-to-one correspondence between position encoding and absolute time to ensure the model accurately perceives temporal changes in video information.
+The model architecture of Kwai Keye-VL is based on the Qwen3-8B language model and incorporates a VisionEncoder initialized with open-source SigLIP. Kwai Keye supports native dynamic resolution, preserving the original aspect ratio of images as much as possible by dividing each image into a sequence of 14x14 patches. Subsequently, a simple MLP layer maps and merges the visual tokens. The model employs 3D RoPE (Rotary Position Embedding) as the position encoding to achieve unified processing of text, image, and video information, establishing a one-to-one correspondence between position encoding and absolute time to ensure the model accurately perceives temporal changes in video information.
 
 <div align="center">
   <img src="asset/architecture.png" width="100%" alt="Kwai Keye Architecture">
@@ -30,7 +28,7 @@ The model architecture of Kwai Keye is based on the Qwen3-8B language model and 
 ## Pre-Train: Multimodal Foundation Capability Building
 
 <div align="center">
-  <img src="asset/pre-train.png" width="100%" alt="Kwai Keye Architecture">
+  <img src="asset/pre-train.png" width="100%" alt="Kwai Keye Pretraining">
 </div>
 <details>
   <summary>More Details</summary>
@@ -42,14 +40,14 @@ The model architecture of Kwai Keye is based on the Qwen3-8B language model and 
   - **Self-Built Datasets**: High-quality internal datasets are specifically constructed, especially for detailed captions and Chinese OCR, to compensate for the shortcomings of open-source data.
 
   ### Training Process: Four-Stage Progressive Optimization
-  Kwai Keye adopts a four-stage progressive training strategy:
+  Kwai Keye-VL adopts a four-stage progressive training strategy:
 
   - **Stage 0 (Visual Pre-training)**: Continuously pre-trains the visual encoder to adapt to internal data distribution and support dynamic resolution.
   - **Stage 1 (Cross-Modal Alignment)**: Freezes the backbone model and trains only the MLP to establish robust image-text alignment at low cost.
   - **Stage 2 (Multi-Task Pre-training)**: Unlocks all parameters to comprehensively enhance the model's visual understanding capabilities.
   - **Stage 3 (Annealing Training)**: Fine-tunes with high-quality data to further improve the model's fine-grained understanding capabilities.
 
-  Finally, Kwai Keye explores isomorphic heterogeneous fusion technology by averaging parameters of annealed training models with different data ratios, reducing model bias while retaining multidimensional capabilities, thereby enhancing the model's robustness.
+  Finally, Kwai Keye-VL explores isomorphic heterogeneous fusion technology by averaging parameters of annealed training models with different data ratios, reducing model bias while retaining multidimensional capabilities, thereby enhancing the model's robustness.
 
 </details>
 
@@ -61,7 +59,7 @@ The post-training phase of Kwai Keye is meticulously designed into two phases wi
 ### A. No-Reasoning Training: Strengthening Basic Performance
 
 <div align="center">
-  <img src="asset/post1.jpeg" width="100%" alt="Kwai Keye Architecture">
+  <img src="asset/post1.jpeg" width="100%" alt="Kwai Keye Post-Training">
 </div>
 
 This phase focuses on the model's basic performance and stability in non-reasoning scenarios:
@@ -79,7 +77,7 @@ This phase focuses on the model's basic performance and stability in non-reasoni
 ### B. Reasoning Training: Core Breakthrough for Complex Cognition
 
 <div align="center">
-  <img src="asset/post2.jpeg" width="100%" alt="Kwai Keye Architecture">
+  <img src="asset/post2.jpeg" width="100%" alt="Kwai Keye Post-Training">
 </div>
 This phase is the highlight and major contribution of the Kwai Keye training process. By introducing a mix-mode Chain of Thought (CoT) and multi-thinking mode reinforcement learning (RL) mechanisms, it significantly enhances the model's multimodal perception, reasoning, and think-with-image capabilities, enabling it to handle more complex, multi-step tasks.
 
