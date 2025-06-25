@@ -9,7 +9,7 @@
 
 
 ## 🔥 News
-* **`2025.06.26`** 🌟 We are very proud to launch **Kwai Keye-VL**, a cutting-edge multimodal large language model meticulously crafted by the **Foundational Large Model Team** at [Kuaishou](https://www.kuaishou.com/). As a cornerstone AI product within Kuaishou's advanced technology ecosystem, Keye excels in video understanding, visual perception, and reasoning tasks, setting new benchmarks in performance. Our team is working tirelessly to push the boundaries of what's possible, so stay tuned for more exciting updates!
+* **`2025.06.26`** 🌟 We are very proud to launch **Kwai Keye-VL**, a cutting-edge multimodal large language model meticulously crafted by the **Kwai Keye Team** at [Kuaishou](https://www.kuaishou.com/). As a cornerstone AI product within Kuaishou's advanced technology ecosystem, Keye excels in video understanding, visual perception, and reasoning tasks, setting new benchmarks in performance. Our team is working tirelessly to push the boundaries of what's possible, so stay tuned for more exciting updates!
 
 
 
@@ -20,15 +20,115 @@
 ## Contents <!-- omit in toc -->
 
 - [🔥 News](#-news)
+- [📐 Quick Start](#-quick-start)
+  - [Preprocess and Inference](#preprocess-and-inference)
+  - [Evaluation](#evaluation)
 - [👀 Architecture and Training Strategy](#-architecture-and-training-strategy)
   - [🌟 Pre-Train](#-pre-train)
   - [🌟 Post-Train](#-post-train)
 - [📈 Experimental Results](#-experimental-results)
 - [✒️ Citation](#️-citation)
 
-## 👀 Architecture and Training Strategy
+## 📐 Quick Start
+### Preprocess and Inference
 
-The model architecture of Kwai Keye-VL is based on the Qwen3-8B language model and incorporates a VisionEncoder initialized with open-source SigLIP. Kwai Keye supports native dynamic resolution, preserving the original aspect ratio of images as much as possible by dividing each image into a sequence of 14x14 patches. Subsequently, a simple MLP layer maps and merges the visual tokens. The model employs 3D RoPE (Rotary Position Embedding) as the position encoding to achieve unified processing of text, image, and video information, establishing a one-to-one correspondence between position encoding and absolute time to ensure the model accurately perceives temporal changes in video information.
+See [keye-vl-utils/README.md](keye-vl-utils/README.md) for details. ```Keye-vl-utils``` contains a set of helper functions for processing and integrating visual language information with Keye Series Model.
+
+#### Install
+
+```bash
+pip install keye-vl-utils
+```
+
+#### Keye-VL Inference
+
+```python
+from transformers import AutoModel, AutoProcessor
+from keye_vl_utils import process_vision_info
+
+# default: Load the model on the available device(s)
+model_path = "Keye/Keye-VL-8B-preview"
+
+model = AutoModel.from_pretrained(
+    model_path, torch_dtype="auto", device_map="auto", attn_implementation="flash_attention_2", trust_remote_code=True,
+).to('cuda')
+
+# You can set the maximum tokens for a video through the environment variable VIDEO_MAX_PIXELS
+# based on the maximum tokens that the model can accept. 
+# export VIDEO_MAX_PIXELS = 32000 * 28 * 28 * 0.9
+
+
+# You can directly insert a local file path, a URL, or a base64-encoded image into the position where you want in the text.
+messages = [
+    # Image
+    ## Local file path
+    [{"role": "user", "content": [{"type": "image", "image": "file:///path/to/your/image.jpg"}, {"type": "text", "text": "Describe this image."}]}],
+    ## Image URL
+    [{"role": "user", "content": [{"type": "image", "image": "http://path/to/your/image.jpg"}, {"type": "text", "text": "Describe this image."}]}],
+    ## Base64 encoded image
+    [{"role": "user", "content": [{"type": "image", "image": "data:image;base64,/9j/..."}, {"type": "text", "text": "Describe this image."}]}],
+    ## PIL.Image.Image
+    [{"role": "user", "content": [{"type": "image", "image": pil_image}, {"type": "text", "text": "Describe this image."}]}],
+    ## Model dynamically adjusts image size, specify dimensions if required.
+    [{"role": "user", "content": [{"type": "image", "image": "file:///path/to/your/image.jpg", "resized_height": 280, "resized_width": 420}, {"type": "text", "text": "Describe this image."}]}],
+    # Video
+    ## Local video path
+    [{"role": "user", "content": [{"type": "video", "video": "file:///path/to/video1.mp4"}, {"type": "text", "text": "Describe this video."}]}],
+    ## Local video frames
+    [{"role": "user", "content": [{"type": "video", "video": ["file:///path/to/extracted_frame1.jpg", "file:///path/to/extracted_frame2.jpg", "file:///path/to/extracted_frame3.jpg"],}, {"type": "text", "text": "Describe this video."},],}],
+    ## Model dynamically adjusts video nframes, video height and width. specify args if required.
+    [{"role": "user", "content": [{"type": "video", "video": "file:///path/to/video1.mp4", "fps": 2.0, "resized_height": 280, "resized_width": 280}, {"type": "text", "text": "Describe this video."}]}],
+]
+
+processor = AutoProcessor.from_pretrained(model_path)
+model = KeyeForConditionalGeneration.from_pretrained(model_path, torch_dtype="auto", device_map="auto")
+text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+images, videos, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
+inputs = processor(text=text, images=images, videos=videos, padding=True, return_tensors="pt", **video_kwargs).to("cuda")
+print(inputs)
+generated_ids = model.generate(**inputs)
+print(generated_ids)
+```
+### Evaluation
+See [evaluation/KC-MMBench/README.md](evaluation/KC-MMBench/README.md) for details.
+
+#### Example of Evaluation
+
+Here is an example of an evaluation using VLMs on our datasets. The following configuration needs to be added to the config file.
+```python
+{
+
+    "model":'...'
+    "data": {
+        "CPV": {
+            "class": "KwaiVQADataset",
+            "dataset": "CPV"
+        },
+        "Video_Topic": {
+            "class": "KwaiVQADataset",
+            "dataset": "Video_Topic"
+        },
+        "Video_Order": {
+            "class": "KwaiVQADataset",
+            "dataset": "Video_Order"
+        },
+        "PornComment": {
+            "class": "KwaiYORNDataset",
+            "dataset": "PornComment"
+        },
+        "High_like":{
+            "class":"KwaiYORNDataset",
+            "dataset":"High_like"
+        },
+        "SPU": {
+            "class": "KwaiYORNDataset",
+            "dataset": "SPU"
+        }
+    }
+}
+```
+
+## 👀 Architecture and Training Strategy
 
 <div align="center">
   <img src="asset/architecture.png" width="100%" alt="Kwai Keye Architecture">
@@ -117,7 +217,9 @@ The post-training phase of Kwai Keye is meticulously designed into two phases wi
 </details>
 
 ## 📈 Experimental Results
-![image](https://github.com/user-attachments/assets/70dbee5d-2d6f-41fe-8aa5-a2c105424ced)
+
+![image](https://github.com/user-attachments/assets/a27cc0b8-e511-4879-969a-b6bc90f61c7e)
+
 
 1. Keye-VL-8B establishes itself with powerful, state-of-the-art perceptual abilities that are competitive with leading models. 
 2. Keye-VL-8B demonstrates exceptional proficiency in video understanding. Across a comprehensive suite of authoritative public video benchmarks, including Video-MME, Video-MMMU, TempCompass, LongVideoBench, and MMVU, the model's performance significantly surpasses that of other top-tier models of a comparable size.
